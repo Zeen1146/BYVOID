@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Matrix Effect by Void</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #000; overflow: hidden; font-family: monospace; }
+    canvas { display: block; position: absolute; top: 0; left: 0; }
+    #bg-video {
+      position: absolute; top: 0; left: 0;
+      width: 100%; height: 100%;
+      object-fit: cover;
+      opacity: 0.15;
+      display: none;
+      pointer-events: none;
+    }
+    #panel {
+      position: absolute; bottom: 0; left: 0; right: 0;
+      background: rgba(0,0,0,0.88);
+      border-top: 1px solid #0f0;
+      padding: 14px 16px;
+      display: flex; flex-wrap: wrap;
+      gap: 12px; align-items: flex-end;
+      z-index: 10;
+    }
+    .ctrl { display: flex; flex-direction: column; gap: 5px; }
+    .ctrl-label { color: #0a0; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; }
+    select, input[type=color] {
+      background: #000; color: #0f0;
+      border: 1px solid #0f0;
+      padding: 7px 8px; font: 13px monospace;
+      border-radius: 4px; cursor: pointer;
+    }
+    input[type=range] { width: 100px; accent-color: #0f0; }
+    input[type=color] { width: 44px; height: 34px; padding: 2px; cursor: pointer; }
+    .val-display { color: #0f0; font-size: 12px; text-align: center; }
+    .btn {
+      background: #000; color: #0f0;
+      border: 1px solid #0f0;
+      padding: 9px 14px; font: 13px monospace;
+      border-radius: 4px; cursor: pointer;
+      white-space: nowrap;
+    }
+    .btn:hover { background: #001a00; }
+    .btn.active { background: #003300; border-color: #0f0; }
+    #upload-btn { border-style: dashed; }
+    #footer {
+      width: 100%; display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-top: 8px;
+      border-top: 1px solid #030;
+      margin-top: 2px;
+    }
+    #mode-badge {
+      color: #0a0; font-size: 11px;
+      border: 1px solid #030;
+      padding: 3px 10px; border-radius: 20px;
+    }
+    #by-void { color: #0f0; font-size: 12px; letter-spacing: 2px; }
+    #rec-dot {
+      display: inline-block; width: 8px; height: 8px;
+      background: red; border-radius: 50%;
+      margin-right: 5px; display: none;
+    }
+  </style>
+</head>
+<body>
+
+<video id="bg-video" autoplay loop muted playsinline></video>
+<canvas id="c"></canvas>
+<video id="vid" style="display:none" autoplay loop muted playsinline></video>
+<input type="file" id="file-in" accept="video/*" style="display:none">
+
+<div id="panel">
+
+  <div class="ctrl">
+    <span class="ctrl-label">Video</span>
+    <button class="btn" id="upload-btn" onclick="document.getElementById('file-in').click()">+ Upload MP4</button>
+  </div>
+
+  <div class="ctrl">
+    <span class="ctrl-label">Suara</span>
+    <button class="btn" id="sound-btn" disabled>Suara: OFF</button>
+  </div>
+
+  <div class="ctrl">
+    <span class="ctrl-label">BG Video</span>
+    <button class="btn" id="bg-btn" disabled>BG: OFF</button>
+  </div>
+
+  <div class="ctrl">
+    <span class="ctrl-label">Ukuran</span>
+    <input type="range" id="fs" min="6" max="32" value="14" step="1">
+    <div class="val-display" id="fsv">14 px</div>
+  </div>
+
+  <div class="ctrl">
+    <span class="ctrl-label">Kecepatan</span>
+    <input type="range" id="speed" min="1" max="10" value="5" step="1">
+    <div class="val-display" id="speedv">5</div>
+  </div>
+
+  <div class="ctrl">
+    <span class="ctrl-label">Kepadatan</span>
+    <input type="range" id="density" min="1" max="10" value="7" step="1">
+    <div class="val-display" id="densityv">7</div>
+  </div>
+
+  <div class="ctrl">
+    <span class="ctrl-label">Opacity BG</span>
+    <input type="range" id="bgopa" min="1" max="30" value="15" step="1">
+    <div class="val-display" id="bgopav">15%</div>
+  </div>
+
+  <div class="ctrl">
+    <span class="ctrl-label">Warna</span>
+    <select id="pal">
+      <option value="matrix">Hijau</option>
+      <option value="amber">Amber</option>
+      <option value="blue">Biru</option>
+      <option value="white">Putih</option>
+      <option value="rainbow">Rainbow</option>
+      <option value="custom">Custom</option>
+    </select>
+  </div>
+
+  <div class="ctrl" id="custom-color-ctrl" style="display:none">
+    <span class="ctrl-label">Pilih warna</span>
+    <input type="color" id="custom-color" value="#00ff00">
+  </div>
+
+  <div class="ctrl">
+    <span class="ctrl-label">Karakter</span>
+    <select id="cset">
+      <option value="mix">Mix</option>
+      <option value="binary">Biner</option>
+      <option value="kata">Katakana</option>
+      <option value="hex">Hex</option>
+      <option value="alpha">Alfabet</option>
+    </select>
+  </div>
+
+  <div class="ctrl">
+    <span class="ctrl-label">Efek</span>
+    <button class="btn" id="invert-btn">Invert: OFF</button>
+  </div>
+
+  <div class="ctrl">
+    <span class="ctrl-label">Fullscreen</span>
+    <button class="btn" id="fs-btn">[ ]</button>
+  </div>
+
+  <div class="ctrl">
+    <span class="ctrl-label">Rekam</span>
+    <button class="btn" id="rec-btn">⏺ Rekam</button>
+  </div>
+
+  <div class="ctrl">
+    <span class="ctrl-label">Simpan</span>
+    <button class="btn" id="dl">Download PNG</button>
+  </div>
+
+  <div id="footer">
+    <span id="mode-badge">animasi</span>
+    <span id="rec-indicator"><span id="rec-dot"></span></span>
+    <span id="by-void">by Void</span>
+  </div>
+
+</div>
+
+<script>
+  const canvas = document.getElementById('c');
+  const ctx = canvas.getContext('2d');
+  const video = document.getElementById('vid');
+  const bgVideo = document.getElementById('bg-video');
+
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+
+  let fontSize = 14;
+  let drops = [];
+  let videoReady = false;
+  let invertOn = false;
+  let soundOn = false;
+  let bgOn = false;
+  let frameCount = 0;
+  let speedVal = 5;
+  let densityVal = 7;
+  let recording = false;
+  let mediaRecorder = null;
+  let recordedChunks = [];
+
+  const CHARS = {
+    mix:   '01アイウエオカキクケコ{}[]<>#$@!%',
+    binary:'01',
+    kata:  'アイウエオカキクケコサシスセソタチツテトナニヌネノ',
+    hex:   '0123456789ABCDEF',
+    alpha: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'
+  };
+
+  function hexToRgb(hex) {
+    const r = parseInt(hex.slice(1,3),16);
+    const g = parseInt(hex.slice(3,5),16);
+    const b = parseInt(hex.slice(5,7),16);
+    return {r,g,b};
+  }
+
+  function getColor(b, x) {
+    const pal = document.getElementById('pal').value;
+    const t = b / 255;
+    if (pal === 'matrix')  return `rgba(0,${Math.round(b)},0,1)`;
+    if (pal === 'amber')   return `rgba(${Math.round(b)},${Math.round(b*0.55)},0,1)`;
+    if (pal === 'blue')    return `rgba(0,${Math.round(b*0.4)},${Math.round(b)},1)`;
+    if (pal === 'white')   return `rgba(${Math.round(b)},${Math.round(b)},${Math.round(b)},1)`;
+    if (pal === 'rainbow') return `hsl(${Math.round(x*3)},100%,${Math.round(30+t*40)}%)`;
+    if (pal === 'custom') {
+      const c = document.getElementById('custom-color').value;
+      const rgb = hexToRgb(c);
+      return `rgba(${Math.round(rgb.r*t)},${Math.round(rgb.g*t)},${Math.round(rgb.b*t)},1)`;
+    }
+    return `rgba(0,${Math.round(b)},0,1)`;
+  }
+
+  function getChar() {
+    const set = CHARS[document.getElementById('cset').value];
+    return set[Math.floor(Math.random() * set.length)];
+  }
+
+  function initDrops() {
+    const cols = Math.floor(canvas.width / fontSize);
+    drops = Array.from({ length: cols }, () => Math.random() * -50);
+  }
+  initDrops();
+
+  const off = document.createElement('canvas');
+  const offCtx = off.getContext('2d');
+
+  function draw() {
+    requestAnimationFrame(draw);
+    frameCount++;
+    const skip = 11 - speedVal;
+    if (frameCount % skip !== 0) return;
+
+    const fs = fontSize;
+    const cols = Math.floor(canvas.width / fs);
+    const rows = Math.floor(canvas.height / fs);
+
+    ctx.fillStyle = 'rgba(0,0,0,0.1)';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.font = fs + 'px monospace';
+
+    if (videoReady && !video.paused) {
+      off.width = cols;
+      off.height = rows;
+      offCtx.drawImage(video, 0, 0, cols, rows);
+      const pixels = offCtx.getImageData(0, 0, cols, rows).data;
+      const threshold = Math.round((10 - densityVal) * 25);
+
+      for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+          const i = (r * cols + c) * 4;
+          let b = pixels[i]*0.299 + pixels[i+1]*0.587 + pixels[i+2]*0.114;
+          if (invertOn) b = 255 - b;
+          if (b < threshold) continue;
+          ctx.fillStyle = getColor(Math.round(b), c);
+          ctx.fillText(getChar(), c * fs, r * fs);
+        }
+      }
+    } else {
+      const threshold = Math.round((10 - densityVal) * 0.097);
+      for (let i = 0; i < drops.length; i++) {
+        const b = Math.floor(Math.random() * 155 + 100);
+        ctx.fillStyle = getColor(b, i);
+        ctx.fillText(getChar(), i * fs, drops[i] * fs);
+        if (drops[i] * fs > canvas.height && Math.random() > (0.99 - threshold)) drops[i] = 0;
+        drops[i]++;
+      }
+    }
+  }
+  draw();
+
+  // Upload video
+  document.getElementById('file-in').addEventListener('change', function() {
+    const file = this.files[0];
+    if (!file) return;
+    const url = URL.createObjectURL(file);
+    video.src = url;
+    video.muted = true;
+    video.play();
+    bgVideo.src = url;
+    videoReady = true;
+    soundOn = false;
+    document.getElementById('sound-btn').textContent = 'Suara: OFF';
+    document.getElementById('sound-btn').disabled = false;
+    document.getElementById('sound-btn').classList.remove('active');
+    document.getElementById('bg-btn').disabled = false;
+    document.getElementById('upload-btn').textContent = '+ Ganti video';
+    document.getElementById('mode-badge').textContent = file.name.slice(0,22);
+  });
+
+  // Suara
+  document.getElementById('sound-btn').addEventListener('click', function() {
+    soundOn = !soundOn;
+    video.muted = !soundOn;
+    this.textContent = soundOn ? 'Suara: ON' : 'Suara: OFF';
+    this.classList.toggle('active', soundOn);
+  });
+
+  // BG Video
+  document.getElementById('bg-btn').addEventListener('click', function() {
+    bgOn = !bgOn;
+    bgVideo.style.display = bgOn ? 'block' : 'none';
+    if (bgOn) bgVideo.play();
+    this.textContent = bgOn ? 'BG: ON' : 'BG: OFF';
+    this.classList.toggle('active', bgOn);
+  });
+
+  // Opacity BG
+  document.getElementById('bgopa').addEventListener('input', function() {
+    bgVideo.style.opacity = this.value / 100;
+    document.getElementById('bgopav').textContent = this.value + '%';
+  });
+
+  // Font size
+  document.getElementById('fs').addEventListener('input', function() {
+    fontSize = +this.value;
+    document.getElementById('fsv').textContent = this.value + ' px';
+    initDrops();
+  });
+
+  // Speed
+  document.getElementById('speed').addEventListener('input', function() {
+    speedVal = +this.value;
+    document.getElementById('speedv').textContent = this.value;
+  });
+
+  // Density
+  document.getElementById('density').addEventListener('input', function() {
+    densityVal = +this.value;
+    document.getElementById('densityv').textContent = this.value;
+  });
+
+  // Warna custom toggle
+  document.getElementById('pal').addEventListener('change', function() {
+    document.getElementById('custom-color-ctrl').style.display =
+      this.value === 'custom' ? 'flex' : 'none';
+  });
+
+  // Invert
+  document.getElementById('invert-btn').addEventListener('click', function() {
+    invertOn = !invertOn;
+    this.textContent = invertOn ? 'Invert: ON' : 'Invert: OFF';
+    this.classList.toggle('active', invertOn);
+  });
+
+  // Fullscreen
+  document.getElementById('fs-btn').addEventListener('click', () => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen();
+      document.getElementById('fs-btn').textContent = '[X]';
+    } else {
+      document.exitFullscreen();
+      document.getElementById('fs-btn').textContent = '[ ]';
+    }
+  });
+
+  // Rekam video
+  document.getElementById('rec-btn').addEventListener('click', function() {
+    if (!recording) {
+      recordedChunks = [];
+      const stream = canvas.captureStream(30);
+      mediaRecorder = new MediaRecorder(stream, { mimeType: 'video/webm' });
+      mediaRecorder.ondataavailable = (e) => { if (e.data.size > 0) recordedChunks.push(e.data); };
+      mediaRecorder.onstop = () => {
+        const blob = new Blob(recordedChunks, { type: 'video/webm' });
+        const a = document.createElement('a');
+        a.download = 'matrix-void.webm';
+        a.href = URL.createObjectURL(blob);
+        a.click();
+      };
+      mediaRecorder.start();
+      recording = true;
+      this.textContent = '⏹ Stop & Save';
+      this.classList.add('active');
+      document.getElementById('rec-dot').style.display = 'inline-block';
+    } else {
+      mediaRecorder.stop();
+      recording = false;
+      this.textContent = '⏺ Rekam';
+      this.classList.remove('active');
+      document.getElementById('rec-dot').style.display = 'none';
+    }
+  });
+
+  // Download PNG
+  document.getElementById('dl').addEventListener('click', () => {
+    const a = document.createElement('a');
+    a.download = 'matrix-void.png';
+    a.href = canvas.toDataURL();
+    a.click();
+  });
+
+  window.addEventListener('resize', () => {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    initDrops();
+  });
+</script>
+</body>
+</html>
