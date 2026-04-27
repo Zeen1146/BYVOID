@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BYVOID | DIGITAL SPACE</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;800&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; }
+        
+        body {
+            background: #000;
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Kanvas buat Animasi Plexus (Background) */
+        canvas#plexusCanvas {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+        }
+
+        /* Container Panel Utama */
+        .main-panel {
+            position: relative;
+            z-index: 10;
+            width: 85%;
+            max-width: 320px; /* Ramping & pas di HP */
+            padding: 30px 20px;
+            background: rgba(10, 10, 10, 0.7);
+            backdrop-filter: blur(20px);
+            border: 2px solid rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            text-align: center;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+        }
+
+        .avatar-box {
+            width: 70px;
+            height: 70px;
+            background: #111;
+            color: #fff;
+            border-radius: 20px;
+            margin: 0 auto 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            font-weight: 800;
+            border: 1px solid rgba(255,255,255,0.1);
+            text-shadow: 0 0 10px white;
+        }
+
+        h1 { font-size: 1.2rem; letter-spacing: 5px; margin-bottom: 5px; font-weight: 800; color: #fff; text-shadow: 0 0 10px rgba(0,100,255,0.5); }
+        .tagline { font-size: 0.6rem; color: #888; text-transform: uppercase; letter-spacing: 3px; margin-bottom: 30px; }
+
+        .link-list { display: flex; flex-direction: column; gap: 12px; }
+
+        .panel-btn {
+            padding: 14px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 12px;
+            text-decoration: none;
+            color: #ccc;
+            font-size: 0.8rem;
+            font-weight: 600;
+            border: 1px solid transparent;
+            transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .panel-btn:hover {
+            border-color: rgba(0, 100, 255, 0.6); /* Border Neon Biru pas Hover */
+            color: white;
+            background: rgba(0, 100, 255, 0.1);
+            transform: translateY(-3px);
+            box-shadow: 0 0 15px rgba(0, 100, 255, 0.3);
+        }
+
+        .footer { margin-top: 30px; font-size: 0.6rem; color: #333; letter-spacing: 1px; }
+    </style>
+</head>
+<body>
+
+    <canvas id="plexusCanvas"></canvas>
+
+    <div class="main-panel">
+        <div class="avatar-box">Z</div>
+        <h1>BYVOID</h1>
+        <p class="tagline">Digital Archive</p>
+
+        <div class="link-list">
+            <a href="#" class="panel-btn">GALLERY ARCHIVE</a>
+            <a href="#" class="panel-btn">AGENT PROFILE</a>
+            <a href="#" class="panel-btn">NETWORK ACCESS</a>
+        </div>
+
+        <div class="footer">EST. 2026 // VOCATIONAL DEV</div>
+    </div>
+
+    <script>
+        // Script buat Animasi Plexus (Background)
+        const canvas = document.getElementById('plexusCanvas');
+        const ctx = canvas.getContext('2d');
+        let width, height;
+
+        function resize() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        class Particle {
+            constructor() {
+                this.x = Math.random() * width;
+                this.y = Math.random() * height;
+                this.vx = (Math.random() - 0.5) * 1.5; // Kecepatan gerak X
+                this.vy = (Math.random() - 0.5) * 1.5; // Kecepatan gerak Y
+                this.radius = Math.random() * 2;
+            }
+
+            update() {
+                // Pantulan dinding
+                if (this.x < 0 || this.x > width) this.vx *= -1;
+                if (this.y < 0 || this.y > height) this.vy *= -1;
+                this.x += this.vx;
+                this.y += this.vy;
+            }
+
+            draw() {
+                ctx.fillStyle = 'rgba(0, 100, 255, 0.6)'; // Warna Partikel (Biru)
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        const particles = [];
+        const particleCount = 60; // Jumlah partikel
+        const connectionDistance = 120; // Jarak garis nyambung
+
+        for (let i = 0; i < particleCount; i++) particles.push(new Particle());
+
+        function animate() {
+            ctx.clearRect(0, 0, width, height);
+            
+            // Latar belakang biru gelap tipis biar panelnya nongol
+            ctx.fillStyle = 'rgba(0, 0, 50, 0.05)';
+            ctx.fillRect(0, 0, width, height);
+
+            particles.forEach((p, i) => {
+                p.update();
+                p.draw();
+
+                // Cek jarak antar partikel buat gambar garis
+                for (let j = i + 1; j < particles.length; j++) {
+                    const p2 = particles[j];
+                    const dx = p.x - p2.x;
+                    const dy = p.y - p2.y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+
+                    if (distance < connectionDistance) {
+                        // Ketebalan & Opacity garis berdasarkan jarak
+                        ctx.strokeStyle = `rgba(0, 100, 255, ${1 - distance / connectionDistance})`;
+                        ctx.lineWidth = 0.5;
+                        ctx.beginPath();
+                        ctx.moveTo(p.x, p.y);
+                        ctx.lineTo(p2.x, p2.y);
+                        ctx.stroke();
+                    }
+                }
+            });
+
+            requestAnimationFrame(animate);
+        }
+
+        animate();
+    </script>
+</body>
+</html>
