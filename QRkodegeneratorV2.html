@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kreator QR Anti-Boring by Void</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #f0f2f5;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 30px 16px 60px;
+      color: #333;
+    }
+    .header { text-align: center; margin-bottom: 30px; }
+    .header h1 { font-size: 28px; font-weight: 800; color: #1a1a1a; }
+    .header p { color: #666; font-size: 15px; margin-top: 6px; }
+    
+    .main-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 25px;
+      justify-content: center;
+      width: 100%;
+      max-width: 1100px;
+    }
+
+    .card-controls {
+      background: #fff;
+      border-radius: 20px;
+      box-shadow: 0 4px 25px rgba(0,0,0,0.06);
+      padding: 25px;
+      width: 100%;
+      max-width: 450px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    .card-preview {
+      background: #fff;
+      border-radius: 20px;
+      box-shadow: 0 4px 25px rgba(0,0,0,0.06);
+      padding: 25px;
+      flex: 1;
+      min-width: 320px;
+      max-width: 450px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+    }
+
+    .ctrl-label {
+      font-size: 12px; font-weight: 700;
+      color: #666; text-transform: uppercase;
+      letter-spacing: 0.8px; margin-bottom: 6px;
+    }
+
+    textarea, input[type=text], select {
+      width: 100%;
+      border: 2px solid #eee;
+      border-radius: 12px;
+      padding: 12px 15px;
+      font-size: 15px;
+      background: #fafafa;
+      outline: none;
+      transition: 0.2s;
+    }
+    textarea { height: 100px; resize: none; }
+    textarea:focus, input[type=text]:focus, select:focus {
+      border-color: #007bff; background: #fff;
+    }
+
+    .row { display: flex; gap: 12px; }
+    .row > div { flex: 1; }
+
+    input[type=range] { width: 100%; accent-color: #007bff; cursor: pointer; }
+    .val-display { font-size: 12px; color: #888; text-align: right; margin-top: 4px; }
+
+    input[type=color] {
+      width: 100%; height: 45px;
+      border: 2px solid #eee;
+      border-radius: 10px;
+      cursor: pointer; padding: 4px;
+      background: #fafafa;
+    }
+
+    .section-box {
+      border: 2px solid #f0f0f0;
+      border-radius: 14px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .frame-picker {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+    .frame-item {
+      border: 2px solid #eee;
+      border-radius: 10px;
+      padding: 8px;
+      cursor: pointer;
+      transition: 0.2s;
+      text-align: center;
+    }
+    .frame-item.active {
+      border-color: #007bff;
+      background-color: rgba(0, 123, 255, 0.05);
+    }
+    .frame-item-title { font-size: 11px; font-weight: 600; margin-top: 5px; color: #555; }
+    .frame-item.active .frame-item-title { color: #007bff; }
+
+    .btn-gen {
+      width: 100%;
+      background: #1a1a1a; color: #fff;
+      border: none; border-radius: 12px;
+      padding: 16px; font-size: 16px;
+      font-weight: 700; cursor: pointer;
+      transition: 0.2s;
+    }
+    .btn-gen:hover { background: #333; }
+    .btn-gen:active { transform: scale(0.98); }
+
+    #final-canvas-wrapper {
+      width: 320px; /* Lebar pratinjau kanvas final */
+      height: 320px;
+      position: relative;
+      background: #fff;
+      border-radius: 15px;
+      overflow: hidden;
+      display: none; /* Disembunyikan sampai QR dibuat */
+    }
+
+    #final-canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .btn-dl {
+      width: 100%; background: #007bff; color: #fff;
+      border: none;
+      border-radius: 12px; padding: 14px;
+      font-size: 15px; font-weight: 700; cursor: pointer;
+      transition: 0.2s;
+    }
+    .btn-dl:hover { background: #0056b3; }
+
+    .footer { margin-top: 40px; font-size: 14px; color: #999; }
+    .footer span { color: #1a1a1a; font-weight: 600; }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <h1>QR Anti-Boring</h1>
+  <p>Tambahkan frame keren biar QR-mu makin gaya! ✨</p>
+</div>
+
+<div class="main-container">
+  
+  <div class="card-controls">
+    <div>
+      <div class="ctrl-label">1. Masukkan Teks/URL</div>
+      <textarea id="qr-input" placeholder="Masukkan URL atau pesanmu di sini..."></textarea>
+    </div>
+
+    <div>
+      <div class="ctrl-label">2. Pilih Frame/Label</div>
+      <div class="frame-picker">
+        <div class="frame-item active" data-frame-type="none">
+          <div style="font-size:24px; color:#aaa; margin:5px 0;">🚫</div>
+          <div class="frame-item-title">Tanpa Frame</div>
+        </div>
+        <div class="frame-item" data-frame-type="label-orange">
+          <div style="height:24px; background:orange; border-radius:4px; margin:5px 0;"></div>
+          <div class="frame-item-title">Label Orange</div>
+        </div>
+        <div class="frame-item" data-frame-type="label-blue">
+          <div style="height:24px; background:deepskyblue; border-radius:4px; margin:5px 0;"></div>
+          <div class="frame-item-title">Label Biru</div>
+        </div>
+        <div class="frame-item" data-frame-type="corner-accents">
+          <div style="width:24px; height:24px; border:3px solid navy; border-radius:4px; margin:5px auto; position:relative;">
+            <div style="position:absolute; bottom:0; right:0; width:8px; height:8px; background:navy; border-radius:0 0 2px 0;"></div>
+          </div>
+          <div class="frame-item-title">Aksen Pojok</div>
+        </div>
+        <div class="frame-item" data-frame-type="circle-outline">
+          <div style="width:24px; height:24px; border:2px solid gray; border-radius:50%; margin:5px auto;"></div>
+          <div class="frame-item-title">Lingkaran</div>
+        </div>
+        <div class="frame-item" data-frame-type="modern-wave">
+          <div style="width:24px; height:18px; background:darkgreen; border-radius:4px; transform: skewY(-10deg); margin:8px auto 2px;"></div>
+          <div class="frame-item-title">Gelombang</div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="ctrl-label">3. Teks Label</div>
+      <input type="text" id="frame-text" value="PINDAI SAYA">
+    </div>
+
+    <div class="section-box">
+      <div class="row">
+        <div>
+          <div class="ctrl-label">4. Warna QR</div>
+          <input type="color" id="qr-dark" value="#000000">
+        </div>
+        <div>
+          <div class="ctrl-label">5. Warna Frame</div>
+          <input type="color" id="frame-color" value="#FF5722"> </div>
+      </div>
+    </div>
+
+    <div class="row">
+      <div>
+        <div class="ctrl-label">6. Kualitas</div>
+        <select id="qr-err">
+          <option value="H">Paling Bagus (H)</option>
+          <option value="Q">Bagus (Q)</option>
+          <option value="M">Cukup (M)</option>
+        </select>
+      </div>
+      <div>
+        <div class="ctrl-label">7. Ukuran</div>
+        <input type="range" id="qr-size" min="200" max="400" value="300" step="10">
+        <div class="val-display" id="qr-size-v">300 px</div>
+      </div>
+    </div>
+
+    <button class="btn-gen" id="gen-btn">Buat QR Keren!</button>
+  </div>
+
+  <div class="card-preview">
+    <div class="ctrl-label" style="margin-bottom:0;">Pratinjau Hasil</div>
+    <div id="final-canvas-wrapper">
+      <canvas id="final-canvas"></canvas>
+    </div>
+    <button class="btn-dl" id="dl-btn" style="display:none;">Simpan (PNG)</button>
+  </div>
+</div>
+
+<div class="footer">by <span>Void</span></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script>
+  // UI Elements
+  const genBtn = document.getElementById('gen-btn');
+  const dlBtn = document.getElementById('dl-btn');
+  const canvasWrapper = document.getElementById('final-canvas-wrapper');
+  const finalCanvas = document.getElementById('final-canvas');
+  const finalCtx = finalCanvas.getContext('2d');
+  
+  // Data State
+  let currentFrameType = 'none';
+
+  // Event Listeners
+  document.getElementById('qr-size').addEventListener('input', e => document.getElementById('qr-size-v').innerText = `${e.target.value} px`);
+
+  document.querySelectorAll('.frame-item').forEach(item => {
+    item.addEventListener('click', function() {
+      document.querySelectorAll('.frame-item').forEach(i => i.classList.remove('active'));
+      this.classList.add('active');
+      currentFrameType = this.dataset.frameType;
+      updateFrameColorInputVisibility();
+    });
+  });
+
+  genBtn.addEventListener('click', generateAntiBoringQR);
+
+  function updateFrameColorInputVisibility() {
+    // Menyembunyikan input warna frame untuk frame yang tidak membutuhkannya
+    const noColorFrame = (currentFrameType === 'none');
+    document.getElementById('frame-color').parentElement.style.opacity = noColorFrame ? '0.3' : '1';
+    document.getElementById('frame-color').disabled = noColorFrame;
+  }
+
+  function generateAntiBoringQR() {
+    const text = document.getElementById('qr-input').value.trim();
+    if (!text) return alert("Hoi, masukkin teks/URL dulu!");
+
+    const size = parseInt(document.getElementById('qr-size').value);
+    
+    // 1. Buat div dummy untuk library qrcodejs
+    const tempDiv = document.createElement('div');
+    const qrObj = new QRCode(tempDiv, {
+      text: text,
+      width: size,
+      height: size,
+      colorLight: "#ffffff", // Latar belakang QR murni harus putih
+      correctLevel: QRCode.CorrectLevel[document.getElementById('qr-err').value]
+    });
+
+    // 2. Tunggu qrcodejs selesai, lalu gambar ke kanvas final
+    setTimeout(() => {
+      const qrCanvasSrc = tempDiv.querySelector('canvas');
+      
+      // Ambil data matrix QR murni
+      const qrCtxSrc = qrCanvasSrc.getContext('2d');
+      const qrImgData = qrCtxSrc.getImageData(0, 0, size, size).data;
+
+      // 3. Tentukan ukuran kanvas final (Frame butuh ruang tambahan)
+      // Kita tambahkan margin 15% di sekeliling QR untuk frame
+      const frameMargin = Math.round(size * 0.15); 
+      const finalCanvasSize = size + (frameMargin * 2);
+      
+      finalCanvas.width = finalCanvasSize;
+      finalCanvas.height = finalCanvasSize;
+      
+      // 4. Gambar latar belakang frame (Putih)
+      finalCtx.fillStyle = '#ffffff';
+      finalCtx.fillRect(0, 0, finalCanvasSize, finalCanvasSize);
+      
+      // 5. Gambar Frame Dekoratif
+      drawFrame(currentFrameType, finalCanvasSize, frameMargin);
+
+      // 6. Gambar matrix QR di atas frame dengan warna kustom
+      const qrDarkColor = document.getElementById('qr-dark').value;
+      const count = qrObj._oQRCode.moduleCount;
+      const step = size / count;
+
+      for (let row = 0; row < count; row++) {
+        for (let col = 0; col < count; col++) {
+          const x = Math.round(col * step);
+          const y = Math.round(row * step);
+          const i = (y * size + x) * 4;
+          
+          if (qrImgData[i] < 128) { // Jika piksel gelap
+            finalCtx.fillStyle = qrDarkColor;
+            
+            // Posisi gambar QR di kanvas final (geser sesuai margin frame)
+            const drawX = x + frameMargin;
+            const drawY = y + frameMargin;
+            
+            // Gambar kotak modul (tambah 0.5px biar nggak kelihatan ada garis tipis)
+            finalCtx.fillRect(drawX, drawY, step + 0.5, step + 0.5);
+          }
+        }
+      }
+
+      // 7. Gambar Teks Label
+      drawLabelText(finalCanvasSize, frameMargin);
+
+      // Tampilkan hasil
+      canvasWrapper.style.display = 'block';
+      dlBtn.style.display = 'block';
+    }, 100);
+  }
+
+  // Fungsi-fungsi pembantu untuk menggambar
+  
+  function drawFrame(type, totalSize, margin) {
+    if (type === 'none') return;
+
+    finalCtx.save();
+    finalCtx.strokeStyle = document.getElementById('frame-color').value;
+    finalCtx.fillStyle = document.getElementById('frame-color').value;
+    finalCtx.lineWidth = Math.round(totalSize * 0.01); // Lebar garis dinamis
+
+    switch (type) {
+      case 'label-orange':
+      case 'label-blue':
+        // Frame persegi sederhana untuk label
+        finalCtx.lineWidth = Math.round(totalSize * 0.005);
+        finalCtx.strokeRect(margin/2, margin/2, totalSize - margin, totalSize - margin);
+        break;
+      case 'corner-accents':
+        // Aksen pojok
+        const l = totalSize * 0.15; // Panjang garis pojok
+        finalCtx.lineWidth = Math.round(totalSize * 0.015);
+        
+        // Kiri Atas
+        finalCtx.beginPath();
+        finalCtx.moveTo(margin/2, margin/2 + l);
+        finalCtx.lineTo(margin/2, margin/2);
+        finalCtx.lineTo(margin/2 + l, margin/2);
+        finalCtx.stroke();
+        
+        // Kanan Bawah (Solid Accent)
+        finalCtx.beginPath();
+        finalCtx.moveTo(totalSize - margin/2 - l, totalSize - margin/2);
+        finalCtx.lineTo(totalSize - margin/2, totalSize - margin/2);
+        finalCtx.lineTo(totalSize - margin/2, totalSize - margin/2 - l);
+        finalCtx.stroke();
+        
+        // Blok pojok solid
+        finalCtx.fillRect(totalSize - margin/2 - margin/4, totalSize - margin/2 - margin/4, margin/4, margin/4);
+        break;
+      case 'circle-outline':
+        // Lingkaran luar
+        finalCtx.beginPath();
+        finalCtx.arc(totalSize / 2, totalSize / 2, (totalSize - margin/2)/2, 0, Math.PI * 2);
+        finalCtx.stroke();
+        break;
+      case 'modern-wave':
+        // Bentuk gelombang dasar di bawah QR
+        finalCtx.beginPath();
+        finalCtx.moveTo(0, totalSize);
+        finalCtx.lineTo(totalSize, totalSize);
+        finalCtx.lineTo(totalSize, totalSize - margin * 1.5);
+        finalCtx.quadraticCurveTo(totalSize/2, totalSize - margin*2.5, 0, totalSize - margin*1.5);
+        finalCtx.closePath();
+        finalCtx.fill();
+        break;
+    }
+    finalCtx.restore();
+  }
+
+  function drawLabelText(totalSize, margin) {
+    const text = document.getElementById('frame-text').value.trim().toUpperCase();
+    if (!text || currentFrameType === 'none') return;
+
+    finalCtx.save();
+    
+    // Ukuran font dinamis
+    const fontSize = Math.round(totalSize * 0.06);
+    finalCtx.font = `800 ${fontSize}px sans-serif`;
+    finalCtx.textAlign = 'center';
+    finalCtx.textBaseline = 'middle';
+    
+    // Tentukan warna dan posisi teks berdasarkan tipe frame
+    if (currentFrameType === 'label-orange' || currentFrameType === 'label-blue') {
+      // Teks di atas QR dalam kotak label solid
+      const textRectH = margin * 0.8;
+      
+      // Latar belakang kotak teks
+      finalCtx.fillStyle = document.getElementById('frame-color').value;
+      
+      const r = margin * 0.2; // radius rounded
+      finalCtx.beginPath();
+      finalCtx.moveTo(margin/2 + r, margin/4);
+      finalCtx.lineTo(totalSize - margin/2 - r, margin/4);
+      finalCtx.quadraticCurveTo(totalSize - margin/2, margin/4, totalSize - margin/2, margin/4 + r);
+      finalCtx.lineTo(totalSize - margin/2, margin/4 + textRectH - r);
+      finalCtx.quadraticCurveTo(totalSize - margin/2, margin/4 + textRectH, totalSize - margin/2 - r, margin/4 + textRectH);
+      finalCtx.lineTo(margin/2 + r, margin/4 + textRectH);
+      finalCtx.quadraticCurveTo(margin/2, margin/4 + textRectH, margin/2, margin/4 + textRectH - r);
+      finalCtx.lineTo(margin/2, margin/4 + r);
+      finalCtx.quadraticCurveTo(margin/2, margin/4, margin/2 + r, margin/4);
+      finalCtx.closePath();
+      finalCtx.fill();
+
+      // Warna teks putih di kotak label
+      finalCtx.fillStyle = '#ffffff';
+      finalCtx.fillText(text, totalSize / 2, margin/4 + textRectH / 2);
+    
+    } else if (currentFrameType === 'modern-wave') {
+      // Warna teks putih di atas blok gelombang
+      finalCtx.fillStyle = '#ffffff';
+      finalCtx.font = `800 ${Math.round(totalSize * 0.05)}px sans-serif`;
+      finalCtx.fillText(text, totalSize / 2, totalSize - margin * 0.8);
+    
+    } else {
+      // Untuk tipe frame lain: Teks di bawah QR
+      finalCtx.fillStyle = '#333333'; // Default abu-abu gelap
+      finalCtx.fillText(text, totalSize / 2, totalSize - margin / 2);
+    }
+    
+    finalCtx.restore();
+  }
+
+  // Fungsi Download
+  dlBtn.addEventListener('click', () => {
+    const link = document.createElement('a');
+    link.download = `QR_Void_Stylized.png`;
+    link.href = finalCanvas.toDataURL();
+    link.click();
+  });
+</script>
+
+</body>
+</html>
