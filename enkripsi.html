@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Void Vault | Auto-Load</title>
+    <style>
+        :root { --bg: #0a0a0a; --accent: #00d4ff; --card: #161b22; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+        body { background: var(--bg); color: #e6edf3; padding: 20px; display: flex; justify-content: center; min-height: 100vh; }
+        
+        .container { 
+            width: 100%; max-width: 500px; background: var(--card); border-radius: 12px; 
+            padding: 25px; box-shadow: 0 8px 32px rgba(0,0,0,0.5); border: 1px solid #30363d;
+            height: fit-content; position: relative;
+        }
+
+        .secret-trigger {
+            position: absolute; top: 0; right: 0;
+            width: 40px; height: 40px;
+            cursor: pointer; z-index: 50;
+            color: #1a1f26; font-size: 8px;
+        }
+
+        h2 { font-size: 18px; margin-bottom: 20px; color: var(--accent); text-align: center; letter-spacing: 1px; }
+        .input-group { margin-bottom: 15px; }
+        label { font-size: 11px; color: #8b949e; display: block; margin-bottom: 5px; text-transform: uppercase; }
+        
+        textarea, input { 
+            width: 100%; background: #0d1117; border: 1px solid #30363d; 
+            border-radius: 8px; padding: 12px; color: white; font-size: 14px; outline: none; 
+        }
+        textarea { height: 100px; }
+        
+        .btns { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+        button { padding: 12px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .btn-enc { background: var(--accent); color: #000; }
+        .btn-dec { background: #238636; color: white; }
+        .btn-panic { background: #da3633; color: white; width: 100%; margin-top: 15px; }
+        
+        .result-box { 
+            margin-top: 20px; background: #0d1117; padding: 15px; 
+            border-radius: 8px; border: 1px dashed var(--accent); display: none; 
+        }
+        .result-text { font-size: 12px; word-break: break-all; color: #79c0ff; margin-bottom: 10px; }
+
+        /* Archive Panel */
+        #archive-panel {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #050505; z-index: 100; display: none; padding: 25px;
+            overflow-y: auto;
+        }
+        .archive-item {
+            background: #111; border: 1px solid #222; border-radius: 8px;
+            padding: 12px; margin-bottom: 15px; border-left: 4px solid var(--accent);
+        }
+        .archive-item p { font-size: 11px; color: #666; margin-bottom: 4px; }
+        .archive-item code { color: #aaa; display: block; word-break: break-all; font-size: 11px; margin-bottom: 10px; }
+        
+        /* Tombol Eksekusi Langsung */
+        .btn-use { background: var(--accent); color: #000; padding: 6px 12px; font-size: 11px; border-radius: 4px; }
+
+        #panic-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 9999; display: none; }
+    </style>
+</head>
+<body>
+
+<div id="panic-screen" onclick="hidePanic()"></div>
+
+<div id="archive-panel">
+    <h2 style="color: #fff; margin-bottom: 20px;">SHADOW ARCHIVE</h2>
+    <div id="archive-list"></div>
+    <button onclick="closeArchive()" style="background: #222; color: #888; width: 100%; margin-top: 20px;">TUTUP</button>
+</div>
+
+<div class="container" id="main-content">
+    <div class="secret-trigger" id="tapZone">.</div>
+    <h2>VOID VAULT v1.4</h2>
+    
+    <div class="input-group">
+        <label>Input Data</label>
+        <textarea id="dataInput" placeholder="Paste kode atau ketik teks..."></textarea>
+    </div>
+
+    <div class="input-group">
+        <label>Password</label>
+        <input type="password" id="passKey" placeholder="Password pengunci...">
+    </div>
+
+    <div class="btns">
+        <button class="btn-enc" onclick="process('enc')">ENCRYPT</button>
+        <button class="btn-dec" onclick="process('dec')">DECRYPT</button>
+    </div>
+
+    <button class="btn-panic" onclick="showPanic()">PANIC MODE</button>
+
+    <div id="resultBox" class="result-box">
+        <div id="output" class="result-text"></div>
+        <button onclick="copyToClipboard()" style="background:#f1f5f9; color:#000; padding:8px; width:100%; font-size:12px;">SALIN HASIL</button>
+    </div>
+</div>
+
+<script>
+    // Triple Tap Logic
+    let tapCount = 0; let lastTap = 0;
+    document.getElementById('tapZone').addEventListener('click', function() {
+        const now = Date.now();
+        if (now - lastTap < 400) tapCount++; else tapCount = 1;
+        lastTap = now;
+        if (tapCount === 3) { openArchive(); tapCount = 0; }
+    });
+
+    function crypt(input, key) {
+        let res = ""; for (let i = 0; i < input.length; i++) {
+            res += String.fromCharCode(input.charCodeAt(i) ^ key.charCodeAt(i % key.length));
+        } return res;
+    }
+
+    function process(type) {
+        const input = document.getElementById('dataInput').value.trim();
+        const key = document.getElementById('passKey').value;
+        const out = document.getElementById('output');
+        const box = document.getElementById('resultBox');
+
+        if (!input || !key) return alert("Data/Pass belum diisi!");
+
+        try {
+            if (type === 'enc') {
+                const encrypted = btoa(crypt(input, key));
+                out.innerText = encrypted;
+                saveToArchive(encrypted, key);
+                box.style.display = 'block';
+            } else {
+                const decrypted = crypt(atob(input), key);
+                out.innerText = decrypted;
+                box.style.display = 'block';
+            }
+        } catch (e) { alert("Format salah atau password salah!"); }
+    }
+
+    function saveToArchive(code, pass) {
+        let arc = JSON.parse(localStorage.getItem('v_arc')) || [];
+        arc.unshift({ code, pass, time: new Date().toLocaleTimeString() });
+        if (arc.length > 5) arc.pop();
+        localStorage.setItem('v_arc', JSON.stringify(arc));
+    }
+
+    function openArchive() {
+        const list = document.getElementById('archive-list');
+        const arc = JSON.parse(localStorage.getItem('v_arc')) || [];
+        list.innerHTML = arc.length === 0 ? '<p style="color:#444; text-align:center;">Kosong.</p>' : '';
+        arc.forEach((item, index) => {
+            list.innerHTML += `
+                <div class="archive-item">
+                    <p>🕒 ${item.time} | Pass: ${item.pass}</p>
+                    <code>${item.code}</code>
+                    <button class="btn-use" onclick="loadFromArchive('${item.code}', '${item.pass}')">PAKAI DATA INI</button>
+                </div>`;
+        });
+        document.getElementById('archive-panel').style.display = 'block';
+    }
+
+    // Fungsi Otomatis Pindahin Data
+    function loadFromArchive(code, pass) {
+        document.getElementById('dataInput').value = code;
+        document.getElementById('passKey').value = pass;
+        closeArchive();
+        alert("Data berhasil dimuat! Klik DECRYPT sekarang.");
+    }
+
+    function closeArchive() { document.getElementById('archive-panel').style.display = 'none'; }
+    function copyToClipboard() {
+        const t = document.getElementById('output').innerText;
+        const el = document.createElement('textarea'); el.value = t;
+        document.body.appendChild(el); el.select(); document.execCommand('copy');
+        document.body.removeChild(el); alert("Salin Berhasil! ✅");
+    }
+    function showPanic() { document.getElementById('panic-screen').style.display = 'block'; }
+    function hidePanic() { document.getElementById('panic-screen').style.display = 'none'; }
+</script>
+
+</body>
+</html>
