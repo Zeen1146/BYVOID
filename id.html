@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistem Keamanan - Verifikasi</title>
+    <style>
+        /* --- 1. TAMPILAN COOKIE (MIRIP GAMBAR KE-2) --- */
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: sans-serif; }
+        body { background: #fdfdfd; display: flex; align-items: center; justify-content: center; height: 100vh; color: #333; overflow: hidden; }
+
+        .consent-box { width: 90%; max-width: 400px; text-align: center; }
+        .icon-placeholder { width: 100%; aspect-ratio: 1/1; background: #eee; display: flex; align-items: center; justify-content: center; border-radius: 4px; margin-bottom: 25px; position: relative; }
+        .icon-placeholder::after { content: '☹'; font-size: 3rem; color: #aaa; }
+        .line { width: 100%; height: 1px; background: #eee; margin-bottom: 25px; }
+
+        h2 { font-size: 1.1rem; font-weight: bold; margin-bottom: 15px; }
+        p.desc { font-size: 0.75rem; color: #777; line-height: 1.6; margin-bottom: 25px; padding: 0 10px; }
+
+        .btn-group { display: flex; gap: 10px; margin-bottom: 20px; }
+        .btn { flex: 1; padding: 12px; border-radius: 4px; cursor: pointer; font-size: 0.85rem; font-weight: 600; border: none; }
+        .btn-menerima { background: #8e54e9; color: white; }
+        .btn-menolak { background: white; color: #333; border: 1px solid #ccc; }
+        a.privacy { color: #8e54e9; text-decoration: underline; font-size: 0.75rem; display: block; margin-top: 10px; }
+
+        /* --- 2. LAYAR MERAH PAS KENA PRANK --- */
+        #scare-layer { 
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background: #ff0000; display: none; z-index: 100; 
+            flex-direction: column; align-items: center; justify-content: center; 
+            text-align: center; color: white; 
+        }
+        #scare-layer h1 { font-size: 3rem; text-shadow: 2px 2px black; }
+    </style>
+</head>
+<body>
+
+    <div class="consent-box" id="mainBox">
+        <div class="icon-placeholder"></div>
+        <div class="line"></div>
+        <h2>Cookie dan konten yang dibuat pengguna</h2>
+        <p class="desc">
+            Situs web ini menggunakan cookie untuk menawarkan informasi yang paling relevan kepada Anda. Harap terima cookie untuk kinerja optimal.
+        </p>
+        <div class="btn-group">
+            <button class="btn btn-menerima" onclick="startPrank()">Menerima</button>
+            <button class="btn btn-menolak" onclick="startPrank()">Menolak</button>
+        </div>
+        <a href="#" class="privacy">Kebijakan privasi</a>
+    </div>
+
+    <div id="scare-layer">
+        <h1>SISTEM ERROR!</h1>
+        <p>HP LU KENA PRANK ZEEN! 😂🔥</p>
+    </div>
+
+    <audio id="scaryAudio" loop>
+        <source src="GameOver.mp3" type="audio/mpeg">
+    </audio>
+
+    <script>
+        let vibrationInterval;
+
+        function startPrank() {
+            const audio = document.getElementById('scaryAudio');
+            const layer = document.getElementById('scare-layer');
+            const box = document.getElementById('mainBox');
+
+            // 1. Jalankan Audio & Biar Tetap Bunyi di Latar Belakang
+            audio.volume = 1.0; 
+            audio.loop = true;
+            audio.play();
+
+            if ('mediaSession' in navigator) {
+                navigator.mediaSession.metadata = new MediaMetadata({
+                    title: 'SYSTEM FATAL ERROR',
+                    artist: 'Virus Detected',
+                    album: 'BYVOID SECURITY',
+                    artwork: [{ src: 'https://via.placeholder.com/512/ff0000/ffffff?text=ERROR', sizes: '512x512', type: 'image/png' }]
+                });
+
+                // Jebakan Tombol Pause: Dipencet malah Play lagi!
+                navigator.mediaSession.setActionHandler('pause', () => {
+                    audio.play(); 
+                });
+            }
+
+            // 2. GETARAN NON-STOP (Minta getar tiap 2 detik biar gak berhenti)
+            if (navigator.vibrate) {
+                navigator.vibrate([1000, 500, 1000]); 
+                vibrationInterval = setInterval(() => {
+                    navigator.vibrate([1000, 500, 1000]);
+                }, 2000);
+            }
+
+            // 3. Ganti Tampilan ke Layar Merah
+            box.style.display = 'none';
+            layer.style.display = 'flex';
+        }
+    </script>
+</body>
+</html>
