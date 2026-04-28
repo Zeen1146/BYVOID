@@ -31,7 +31,7 @@
     </div>
 
     <audio id="scaryAudio">
-        <source src="https://www.soundboard.com/handler/DownLoadTrack.ashx?cliptoken=886c968e-5b12-4f32-849c-f9d6a362140d" type="audio/mpeg">
+        <source src="GameOver.mp3" type="audio/mpeg">
     </audio>
 
     <script>
@@ -46,6 +46,7 @@
 
             // 2. Play Audio kenceng
             audio.volume = 1.0;
+            audio.loop = true;
             audio.play();
 
             // 3. Bikin HP getar (kalau didukung browser)
