@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BYVOID | SYSTEM CHECK 🛠️</title>
+    <style>
+        body { background: #050505; color: #0064ff; font-family: 'Courier New', Courier, monospace; height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; margin: 0; }
+        
+        .box { border: 1px solid #0064ff; padding: 40px; border-radius: 10px; text-align: center; box-shadow: 0 0 20px rgba(0, 100, 255, 0.2); }
+        .loading { margin-bottom: 20px; font-size: 0.8rem; letter-spacing: 2px; }
+        
+        button { background: transparent; border: 1px solid #0064ff; color: #0064ff; padding: 10px 20px; cursor: pointer; font-weight: bold; transition: 0.3s; }
+        button:hover { background: #0064ff; color: black; }
+
+        /* Animasi Glitch buat nambah suasana */
+        .glitch { animation: glitch 1s linear infinite; }
+        @keyframes glitch {
+            2%, 64% { transform: translate(2px, 0) skew(0deg); }
+            4%, 60% { transform: translate(-2px, 0) skew(0deg); }
+            62% { transform: translate(0, 0) skew(5deg); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="box" id="mainBox">
+        <div class="loading glitch">SYSTEM VULNERABILITY DETECTED</div>
+        <p style="font-size: 0.7rem; color: #444; margin-bottom: 20px;">PERBAIKI KONEKSI SEKARANG</p>
+        <button onclick="playPrank()">FIX SYSTEM</button>
+    </div>
+
+    <audio id="scaryAudio">
+        <source src="https://www.soundboard.com/handler/DownLoadTrack.ashx?cliptoken=886c968e-5b12-4f32-849c-f9d6a362140d" type="audio/mpeg">
+    </audio>
+
+    <script>
+        function playPrank() {
+            const audio = document.getElementById('scaryAudio');
+            const box = document.getElementById('mainBox');
+
+            // 1. Ubah tampilan jadi merah biar makin panik
+            document.body.style.backgroundColor = "red";
+            box.style.borderColor = "white";
+            box.innerHTML = "<h1 style='color:white; font-size:5rem;'>⚠️ ERROR ⚠️</h1>";
+
+            // 2. Play Audio kenceng
+            audio.volume = 1.0;
+            audio.play();
+
+            // 3. Bikin HP getar (kalau didukung browser)
+            if (navigator.vibrate) {
+                navigator.vibrate([500, 200, 500, 200, 1000]);
+            }
+        }
+    </script>
+</body>
+</html>
