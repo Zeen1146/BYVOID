@@ -1,59 +1,33 @@
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BYVOID | SYSTEM CHECK 🛠️</title>
-    <style>
-        body { background: #050505; color: #0064ff; font-family: 'Courier New', Courier, monospace; height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; margin: 0; }
-        
-        .box { border: 1px solid #0064ff; padding: 40px; border-radius: 10px; text-align: center; box-shadow: 0 0 20px rgba(0, 100, 255, 0.2); }
-        .loading { margin-bottom: 20px; font-size: 0.8rem; letter-spacing: 2px; }
-        
-        button { background: transparent; border: 1px solid #0064ff; color: #0064ff; padding: 10px 20px; cursor: pointer; font-weight: bold; transition: 0.3s; }
-        button:hover { background: #0064ff; color: black; }
+<script>
+    function startPrank() {
+        const audio = document.getElementById('scaryAudio');
+        const layer = document.getElementById('scare-layer');
+        const box = document.getElementById('mainBox');
 
-        /* Animasi Glitch buat nambah suasana */
-        .glitch { animation: glitch 1s linear infinite; }
-        @keyframes glitch {
-            2%, 64% { transform: translate(2px, 0) skew(0deg); }
-            4%, 60% { transform: translate(-2px, 0) skew(0deg); }
-            62% { transform: translate(0, 0) skew(5deg); }
+        audio.volume = 1.0; 
+        audio.loop = true;
+        audio.play();
+
+        // TRIK BIAR TETEP BUNYI DI LATAR BELAKANG (BISA DI CONTROL DARI NOTIFIKASI)
+        if ('mediaSession' in navigator) {
+            navigator.mediaSession.metadata = new MediaMetadata({
+                title: 'SYSTEM ERROR 404',
+                artist: 'Virus Detected',
+                album: 'BYVOID PRANK',
+                artwork: [{ src: 'https://via.placeholder.com/512/ff0000/ffffff?text=ERROR', sizes: '512x512', type: 'image/png' }]
+            });
+
+            // Biar kalau dia pencet pause di notif, suaranya malah makin kenceng/play lagi
+            navigator.mediaSession.setActionHandler('pause', () => {
+                audio.play(); 
+            });
         }
-    </style>
-</head>
-<body>
 
-    <div class="box" id="mainBox">
-        <div class="loading glitch">SYSTEM VULNERABILITY DETECTED</div>
-        <p style="font-size: 0.7rem; color: #444; margin-bottom: 20px;">PERBAIKI KONEKSI SEKARANG</p>
-        <button onclick="playPrank()">FIX SYSTEM</button>
-    </div>
+        box.style.display = 'none';
+        layer.style.display = 'flex';
 
-    <audio id="scaryAudio">
-        <source src="GameOver.mp3" type="audio/mpeg">
-    </audio>
-
-    <script>
-        function playPrank() {
-            const audio = document.getElementById('scaryAudio');
-            const box = document.getElementById('mainBox');
-
-            // 1. Ubah tampilan jadi merah biar makin panik
-            document.body.style.backgroundColor = "red";
-            box.style.borderColor = "white";
-            box.innerHTML = "<h1 style='color:white; font-size:5rem;'>⚠️ ERROR ⚠️</h1>";
-
-            // 2. Play Audio kenceng
-            audio.volume = 1.0;
-            audio.loop = true;
-            audio.play();
-
-            // 3. Bikin HP getar (kalau didukung browser)
-            if (navigator.vibrate) {
-                navigator.vibrate([500, 200, 500, 200, 1000]);
-            }
+        if (navigator.vibrate) {
+            navigator.vibrate([500, 200, 500, 200, 1000]);
         }
-    </script>
-</body>
-</html>
+    }
+</script>
