@@ -4,28 +4,32 @@
         const layer = document.getElementById('scare-layer');
         const box = document.getElementById('mainBox');
 
+        // 1. Play Audio & Loop
+        audio.src = "GameOver.mp3"; // Pastikan filenya ada di GitHub lo
         audio.volume = 1.0; 
         audio.loop = true;
         audio.play();
 
-        // TRIK BIAR TETEP BUNYI DI LATAR BELAKANG (BISA DI CONTROL DARI NOTIFIKASI)
+        // 2. Trik Biar Tetep Bunyi Pas Keluar Web (Media Session)
         if ('mediaSession' in navigator) {
             navigator.mediaSession.metadata = new MediaMetadata({
                 title: 'SYSTEM ERROR 404',
                 artist: 'Virus Detected',
-                album: 'BYVOID PRANK',
+                album: 'BYVOID SECURITY',
                 artwork: [{ src: 'https://via.placeholder.com/512/ff0000/ffffff?text=ERROR', sizes: '512x512', type: 'image/png' }]
             });
 
-            // Biar kalau dia pencet pause di notif, suaranya malah makin kenceng/play lagi
+            // Kalau dia coba pause dari notif, paksa main lagi!
             navigator.mediaSession.setActionHandler('pause', () => {
                 audio.play(); 
             });
         }
 
+        // 3. Ubah Tampilan
         box.style.display = 'none';
         layer.style.display = 'flex';
 
+        // 4. Getar HP
         if (navigator.vibrate) {
             navigator.vibrate([500, 200, 500, 200, 1000]);
         }
